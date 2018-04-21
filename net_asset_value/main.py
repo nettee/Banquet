@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 from datetime import date, datetime
+import csv
+import argparse
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -46,7 +48,6 @@ def stat(navs, buys, subscription_rate=0.001):
         all_data.append((i, dat, nav, ratio))
         if dat in buy_dates:
             buy_data.append((i, dat, nav, ratio))
-        #print(i, dat, '{:.4f}'.format(nav), '{:.2%}'.format(ratio))
 
     i, _, nav, _ = zip(*all_data)
     plt.plot(i, nav, 'b')
@@ -60,28 +61,24 @@ def stat(navs, buys, subscription_rate=0.001):
 
 if __name__ == '__main__':
 
-    s_date = '2018-2-12'
-    b_dates = [
-            '2018-2-12',
-            '2018-2-22',
-            '2018-2-26',
-            '2018-3-5',
-            '2018-3-12',
-            '2018-3-19',
-            '2018-3-26',
-            '2018-4-2',
-            '2018-4-9',
-            '2018-4-16',
-    ]
+    parser = argparse.ArgumentParser()
+    parser.add_argument('code')
+    parser.add_argument('buy_file')
 
-    start_date = datetime.strptime(s_date, '%Y-%m-%d').date()
-    buy_dates = [datetime.strptime(d, '%Y-%m-%d').date() for d in b_dates]
+    args = parser.parse_args()
 
-    buy_values = [10 for _ in b_dates]
-    buys = list(zip(buy_dates, buy_values))
+    buys = []
 
-    tianhong_hushen_300 = ['000961', start_date]
+    with open(args.buy_file) as csvfile:
+        reader = csv.reader(csvfile)
+        for row in reader:
+            bd, bv = row
+            bd = datetime.strptime(bd, '%Y-%m-%d').date()
+            bv = int(bv)
+            buys.append((bd, bv))
 
-    navs = nav.nav(*tianhong_hushen_300)
+    buy_dates, _ = zip(*buys)
+    start_date = min(buy_dates)
 
+    navs = nav.nav(args.code, start_date)
     stat(navs, buys)
